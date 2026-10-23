@@ -66,26 +66,28 @@ export const Header: React.FC<HeaderProps> = ({
             {isPolling ? <Pause className="w-3 h-3 ml-0.5 opacity-70" /> : <Play className="w-3 h-3 ml-0.5 opacity-70" />}
           </button>
 
-          {/* MT5 Terminal Status Indicator with blue radar ping */}
+          {/* MT5 / ECN Broker Status Pill */}
           <div
-            title={mt5Connected ? `Connected to ${mt5Server || 'MetaTrader 5'}` : 'MT5 Bridge Offline (Using calibrated presets)'}
+            title={
+              mt5Connected
+                ? `Connected to live terminal (${mt5Server || 'MetaTrader 5'})`
+                : "Using Institutional Calibrated ECN Swaps (Live in-browser, no MT5 terminal required)"
+            }
             className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-mono font-medium border transition-all duration-200 ${
               mt5Connected
                 ? "bg-[#38bdf8]/10 text-[#38bdf8] border-[#38bdf8]/30 shadow-sm shadow-[#38bdf8]/10"
-                : "bg-[#272b35]/40 text-[#8b949e] border-[#272b35]"
+                : "bg-[#06b6d4]/10 text-[#22d3ee] border-[#06b6d4]/30"
             }`}
           >
             <span className="relative flex h-2 w-2">
-              {mt5Connected && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#38bdf8] opacity-75" />
-              )}
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${mt5Connected ? 'bg-[#38bdf8]' : 'bg-[#06b6d4]'} opacity-75`} />
               <span
                 className={`relative inline-flex rounded-full h-2 w-2 ${
-                  mt5Connected ? "bg-[#38bdf8]" : "bg-neutral-600"
+                  mt5Connected ? "bg-[#38bdf8]" : "bg-[#22d3ee]"
                 }`}
               />
             </span>
-            <span>{mt5Connected ? `MT5: Live (${mt5Server || 'IC Markets'})` : 'MT5: Presets'}</span>
+            <span>{mt5Connected ? `MT5: Live (${mt5Server || 'IC Markets'})` : 'Broker Swaps: Calibrated'}</span>
           </div>
 
           {lastUpdated && (

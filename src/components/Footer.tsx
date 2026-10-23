@@ -41,11 +41,11 @@ export const Footer: React.FC<FooterProps> = ({ mt5Connected, mt5Server }) => {
           </div>
 
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#181a1f] border border-[#272b35]">
-            <ShieldCheck className={`w-3 h-3 ${mt5Connected ? 'text-[#38bdf8]' : 'text-neutral-500'}`} />
+            <ShieldCheck className={`w-3 h-3 ${mt5Connected ? 'text-[#38bdf8]' : 'text-[#22d3ee]'}`} />
             <span>
               {mt5Connected
                 ? `MT5 Broker: ${mt5Server || 'ICMarkets'}`
-                : 'MT5: Calibrated Presets'}
+                : 'Broker Swaps: Calibrated ECN'}
             </span>
           </div>
 
