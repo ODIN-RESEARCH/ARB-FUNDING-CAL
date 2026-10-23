@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #111215;
+    color: #e6edf3;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Custom scrollbar for dark UI */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111215;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #272b35;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a414f;
+  }
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.custom-dropdown-scrollbar::-webkit-scrollbar {
+  width: 7px;
+}
+.custom-dropdown-scrollbar::-webkit-scrollbar-track {
+  background: #14161a;
+  border-radius: 4px;
+}
+.custom-dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+.custom-dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Shimmer effect for badges and buttons */
+.shimmer-badge {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* Tooltip popup styles */
+.tooltip-popup {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(4px) scale(0.96);
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0.15s;
+  pointer-events: none;
+}
+
+.has-tooltip:hover .tooltip-popup {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Interactive card hover lift */
+.interactive-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}

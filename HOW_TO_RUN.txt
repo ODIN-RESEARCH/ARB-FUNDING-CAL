@@ -1,0 +1,29 @@
+=====================================================================
+         ODIN RESEARCH - FUNDING ARBITRAGE CALCULATOR
+                   https://odinresearch.com
+=====================================================================
+
+HOW TO LAUNCH (Zero installation required!):
+--------------------------------------------
+1. Simply double-click:
+   START_CALCULATOR.bat
+
+2. The calculator will immediately launch in your default web browser
+   at http://localhost:5173.
+   (NO Node.js, NO npm, and NO command line setup required!)
+
+3. Leave the console window open while using the calculator.
+   To close the calculator, simply close the console window.
+
+OPTIONAL - LIVE METATRADER 5 (MT5) STREAMING:
+--------------------------------------------
+If you have MetaTrader 5 installed on your PC and want live broker swaps:
+1. Make sure Python is installed (https://www.python.org/).
+2. Double-click INSTALL_DEPENDENCIES.bat once to install the official MT5 library.
+3. Launch START_CALCULATOR.bat — live broker quotes will stream automatically!
+(If MT5 is not installed, the calculator works 100% fine using built-in calibrated presets.)
+
+DOCUMENTATION & STRATEGY:
+--------------------------------------------
+- Open STRATEGY_GUIDE.md for the institutional carry trade white paper.
+- Open README.md for complete parameter formulas and specifications.
