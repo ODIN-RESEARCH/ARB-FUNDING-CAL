@@ -13,7 +13,7 @@ export const Footer: React.FC<FooterProps> = ({ mt5Connected, mt5Server }) => {
         {/* Left Side: Exactly as requested in user's branding image */}
         <div className="flex items-center gap-3">
           <img
-            src="/odin-crest.png"
+            src="./odin-crest.png"
             alt="Odin Crest Emblem"
             className="w-9 h-9 rounded object-contain border border-[#d4af37]/40 shadow-sm shadow-amber-500/10"
           />

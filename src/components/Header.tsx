@@ -128,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Main Brand Title & Logo Area */}
       <div className="flex items-center gap-3.5">
         <img
-          src="/odin-crest.png"
+          src="./odin-crest.png"
           alt="Odin Research Crest"
           className="w-12 h-12 object-contain rounded-lg border border-[#d4af37]/50 shadow-lg shadow-amber-500/10 p-0.5 bg-[#14161a] hover:scale-105 transition-transform duration-300"
         />
