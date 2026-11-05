@@ -63,7 +63,7 @@ export const ArbitrageStatsBar: React.FC<ArbitrageStatsBarProps> = ({
         {/* Tooltip Popup */}
         <div className="tooltip-popup absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-[#1e2229] border border-[#343a46] rounded-md shadow-xl text-[10px] text-gray-300 font-sans z-30 pointer-events-none">
           <div className="font-bold text-[#00e599] mb-0.5">HL Perpetual Funding</div>
-          Annualized continuous funding yield based on 8-hour rate. Inside floor (-4 to +6 bps), rate is fixed at 10.95%/yr.
+          Annualized continuous funding yield. For Forex (tradeXYZ), floor is 0% between -3 and +3 bps; Crypto has 10.95% floor.
         </div>
       </div>
 
@@ -71,8 +71,8 @@ export const ArbitrageStatsBar: React.FC<ArbitrageStatsBarProps> = ({
       <div className="p-2.5 rounded-lg bg-[#14161a] border border-[#272b35] flex flex-col justify-between interactive-card relative has-tooltip">
         <div className="text-[10px] text-[#8b949e] font-sans flex items-center justify-between">
           <span>MT5 Swaps ({symbol})</span>
-          <span className="text-[9px] text-[#c084fc]">
-            Fair: {mt5Result.fairPremiumBps.toFixed(2)} bps
+          <span className="text-[9px] text-[#c084fc] font-bold">
+            Fair: {mt5Result.fairPremiumBps >= 0 ? '+' : ''}{mt5Result.fairPremiumBps.toFixed(2)} bps ({mt5Result.fairPremiumPrice >= 0 ? '+' : ''}{mt5Result.fairPremiumPrice.toFixed(4)})
           </span>
         </div>
         <div className="flex items-baseline gap-1.5 mt-1">

@@ -1,22 +1,98 @@
 import {
   HLFundingParams,
+  MarketTier,
   FundingCalculationResult,
   MT5CalculationResult,
   ChartCurvePoint,
   MT5SwapPreset
 } from '../types/calculator'
 
-export const DEFAULT_HL_PARAMS: HLFundingParams = {
-  interestRate8hBps: 1.0, // 0.01%
-  interestRateAnnualPct: 10.95, // 1.0 * 3 * 365 / 100
-  floorMinBps: -4.0,
-  floorMaxBps: 6.0,
-  hourlyCapBps: 400.0, // 4% per hour
-  multiplier: 1.0
+/**
+ * Hyperliquid Funding Engine Parameter Tiers:
+ * 1. Crypto / Main DEX: Interest rate 1 bps / 8h (10.95%/yr), Clamp ±5 bps, Band -4 to +6 bps, 8h decay.
+ * 2. xyz TradFi (Commodities, Equities, Indices): Interest rate 1 bps / 8h (5.48%/yr), Clamp ±3 bps, Band -2 to +4 bps, 16h decay.
+ * 3. xyz FX Pairs (JPY, EUR, GBP): Interest rate 0 bps / 8h (0.00%/yr), Clamp ±3 bps, Zero band -3 to +3 bps, 16h decay.
+ */
+export const MARKET_TIER_PARAMS: Record<MarketTier, HLFundingParams> = {
+  fx: {
+    tier: 'fx',
+    interestRate8hBps: 0.0,
+    interestRateAnnualPct: 0.0,
+    clampBps: 3.0,
+    decayDivisor: 16.0,
+    floorMinBps: -3.0,
+    floorMaxBps: 3.0,
+    hourlyCapBps: 400.0,
+    multiplier: 1.0
+  },
+  tradfi: {
+    tier: 'tradfi',
+    interestRate8hBps: 1.0,
+    interestRateAnnualPct: 5.475, // (1.0 / 16) * 24 * 365 / 100
+    clampBps: 3.0,
+    decayDivisor: 16.0,
+    floorMinBps: -2.0,
+    floorMaxBps: 4.0,
+    hourlyCapBps: 400.0,
+    multiplier: 1.0
+  },
+  crypto: {
+    tier: 'crypto',
+    interestRate8hBps: 1.0,
+    interestRateAnnualPct: 10.95, // (1.0 / 8) * 24 * 365 / 100
+    clampBps: 5.0,
+    decayDivisor: 8.0,
+    floorMinBps: -4.0,
+    floorMaxBps: 6.0,
+    hourlyCapBps: 400.0,
+    multiplier: 1.0
+  }
+}
+
+// Default to FX tier since xyz:EUR / xyz:JPY are the primary forex carry arbitrage pairs
+export const DEFAULT_HL_PARAMS: HLFundingParams = MARKET_TIER_PARAMS.fx
+
+/**
+ * Auto-detects the market tier from asset symbol/name.
+ */
+export function detectMarketTier(assetName: string): MarketTier {
+  const upper = assetName.toUpperCase()
+  const clean = upper.replace('XYZ:', '').replace('/', '').trim()
+
+  const fxCurrencies = [
+    'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD',
+    'EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD'
+  ]
+  if (fxCurrencies.some(fx => clean === fx || clean.startsWith(fx))) {
+    return 'fx'
+  }
+
+  const tradfiAssets = [
+    'GOLD', 'XAU', 'SILVER', 'XAG', 'OIL', 'COPPER',
+    'TSLA', 'NVDA', 'AAPL', 'MSFT', 'AMZN', 'GOOGL', 'META',
+    'SPX', 'SPY', 'QQQ', 'NDX', 'DJI', 'JP225', 'US500', 'US30', 'NAS100', 'DAX', 'GER40', 'UK100', 'NIKKEI'
+  ]
+  if (tradfiAssets.some(t => clean === t || clean.includes(t)) || upper.startsWith('XYZ:')) {
+    return 'tradfi'
+  }
+
+  return 'crypto'
+}
+
+/**
+ * Returns calibrated parameters for any asset.
+ */
+export function getParamsForAsset(assetName: string): HLFundingParams {
+  const tier = detectMarketTier(assetName)
+  return MARKET_TIER_PARAMS[tier]
 }
 
 /**
  * Calculates Hyperliquid perp funding rate given a premium in basis points.
+ * Implements the piecewise funding curve:
+ * - If inside floor [floorMinBps, floorMaxBps]: funding = interestRate / decayDivisor
+ * - If above floor (> floorMaxBps): funding = (P - clampBps) / decayDivisor
+ * - If below floor (< floorMinBps): funding = (P + clampBps) / decayDivisor
  */
 export function calculateHLFundingFromPremiumBps(
   premiumBps: number,
@@ -28,43 +104,76 @@ export function calculateHLFundingFromPremiumBps(
   fundingAnnualizedPct: number
   fundingAnnualizedBps: number
 } {
-  const { floorMinBps, floorMaxBps, hourlyCapBps, interestRate8hBps } = params
+  const {
+    floorMinBps = -3.0,
+    floorMaxBps = 3.0,
+    hourlyCapBps = 400.0,
+    interestRate8hBps = 0.0,
+    clampBps = 3.0,
+    decayDivisor = 16.0
+  } = params
 
-  let funding8hBps: number
+  let funding1hBps: number
   let isInsideFloor = false
 
   if (premiumBps >= floorMinBps && premiumBps <= floorMaxBps) {
-    // Inside the floor band: fixed baseline interest rate
+    // Inside the zero-slope floor band
     isInsideFloor = true
-    funding8hBps = interestRate8hBps // 1.0 bps
+    funding1hBps = interestRate8hBps / decayDivisor
   } else if (premiumBps > floorMaxBps) {
-    // Above floor: slope 1 from floorMax
-    // F = P + clamp(I - P, -5, +5) = P - 5 (in 8h bps)
-    funding8hBps = premiumBps - 5.0
+    // Above floor: slope 1/divisor from clamp
+    funding1hBps = (premiumBps - clampBps) / decayDivisor
   } else {
-    // Below floor: slope 1 from floorMin
-    // F = P + 5 (in 8h bps)
-    funding8hBps = premiumBps + 5.0
+    // Below floor: slope 1/divisor from clamp
+    funding1hBps = (premiumBps + clampBps) / decayDivisor
   }
-
-  // Convert 8h to 1h
-  let funding1hBps = funding8hBps / 8.0
 
   // Apply hourly cap
   if (funding1hBps > hourlyCapBps) funding1hBps = hourlyCapBps
   if (funding1hBps < -hourlyCapBps) funding1hBps = -hourlyCapBps
 
   // Recalculate 8h and annualized from capped 1h
-  const capped8hBps = funding1hBps * 8.0
+  const funding8hBps = funding1hBps * 8.0
   const fundingAnnualizedBps = funding1hBps * 24.0 * 365.0
   const fundingAnnualizedPct = fundingAnnualizedBps / 100.0
 
   return {
     isInsideFloor,
-    funding8hBps: capped8hBps,
+    funding8hBps,
     funding1hBps,
     fundingAnnualizedPct,
     fundingAnnualizedBps
+  }
+}
+
+/**
+ * Inverts an annualized funding percentage to find the exact corresponding premium in bps.
+ * Inverse of calculateHLFundingFromPremiumBps.
+ */
+export function invertFundingPctToPremiumBps(
+  fundingPct: number,
+  params: HLFundingParams = DEFAULT_HL_PARAMS
+): number {
+  const {
+    interestRate8hBps = 0.0,
+    clampBps = 3.0,
+    decayDivisor = 16.0,
+    floorMinBps = -3.0,
+    floorMaxBps = 3.0
+  } = params
+
+  // 1h bps = annualizedPct * 100 / (24 * 365) = annualizedPct / 87.6
+  const target1hBps = fundingPct / 87.6
+  const flat1hBps = interestRate8hBps / decayDivisor
+
+  if (Math.abs(target1hBps - flat1hBps) < 1e-8) {
+    return (floorMinBps + floorMaxBps) / 2.0
+  } else if (target1hBps > flat1hBps) {
+    // F_1h = (P - clamp) / divisor => P = F_1h * divisor + clamp
+    return target1hBps * decayDivisor + clampBps
+  } else {
+    // F_1h = (P + clamp) / divisor => P = F_1h * divisor - clamp
+    return target1hBps * decayDivisor - clampBps
   }
 }
 
@@ -147,30 +256,16 @@ export function calculateMT5FairValue(
 
   // Calculate Fair Premium (where HL funding = Implied Annual Rate)
   // Inverse of calculateHLFundingFromPremiumBps
-  let fairPremiumBps: number
-  const baselineRate = params.interestRateAnnualPct // 10.95%
-
-  if (impliedAnnualRatePct >= baselineRate) {
-    // If implied rate > floor, fair premium is above floor:
-    // F_annual = (P - 5) * 10.95 => P = (F_annual / 10.95) + 5
-    fairPremiumBps = (impliedAnnualRatePct / baselineRate) + 5.0
-  } else {
-    // If implied rate < floor, fair premium is below floor:
-    // F_annual = (P + 5) * 10.95 => P = (F_annual / 10.95) - 5.0
-    fairPremiumBps = (impliedAnnualRatePct / baselineRate) - 5.0
-  }
-
+  const fairPremiumBps = invertFundingPctToPremiumBps(impliedAnnualRatePct, params)
   const fairPremiumPrice = (fairPremiumBps / 10000) * safeOracle
 
   // No-carry band: range where neither hedge earns positive carry:
-  // HL funding is between short swap (+0.42%) and minus long swap (+2.61%)
-  // Min boundary: F = shortSwapPct
-  const noCarryMinFunding = annualizedShortPct
-  const noCarryBandMinBps = (noCarryMinFunding / baselineRate) - 5.0
+  // HL funding is between short swap (+annualizedShortPct) and minus long swap (-annualizedLongPct)
+  // Min boundary: F_hl = shortSwapPct
+  const noCarryBandMinBps = invertFundingPctToPremiumBps(annualizedShortPct, params)
 
-  // Max boundary: F = -longSwapPct
-  const noCarryMaxFunding = -annualizedLongPct
-  const noCarryBandMaxBps = (noCarryMaxFunding / baselineRate) - 5.0
+  // Max boundary: F_hl = -longSwapPct
+  const noCarryBandMaxBps = invertFundingPctToPremiumBps(-annualizedLongPct, params)
 
   const premiumVsFairBps = livePremiumBps - fairPremiumBps
 
@@ -251,36 +346,36 @@ export function generateChartPoints(
 export const POPULAR_MT5_PRESETS: MT5SwapPreset[] = [
   {
     id: 'EURUSD',
-    label: 'EUR · EURUSD',
+    label: 'EUR · EURUSD (IC Markets)',
     symbol: 'EURUSD',
     assetName: 'xyz:EUR',
-    swapLongPoints: -8.001,
-    swapShortPoints: 1.301,
+    swapLongPoints: -8.00,
+    swapShortPoints: 1.30,
     pointSize: 0.00001,
     contractSize: 100000,
-    defaultPrice: 1.1192
-  },
-  {
-    id: 'GBPUSD',
-    label: 'GBP · GBPUSD',
-    symbol: 'GBPUSD',
-    assetName: 'xyz:GBP',
-    swapLongPoints: -4.502,
-    swapShortPoints: 0.950,
-    pointSize: 0.00001,
-    contractSize: 100000,
-    defaultPrice: 1.3050
+    defaultPrice: 1.1154
   },
   {
     id: 'USDJPY',
-    label: 'JPY · USDJPY',
+    label: 'JPY · USDJPY (IC Markets)',
     symbol: 'USDJPY',
     assetName: 'xyz:JPY',
-    swapLongPoints: 14.20,
-    swapShortPoints: -22.50,
+    swapLongPoints: 8.20,
+    swapShortPoints: -17.00,
     pointSize: 0.001,
     contractSize: 100000,
-    defaultPrice: 158.39
+    defaultPrice: 157.48
+  },
+  {
+    id: 'GBPUSD',
+    label: 'GBP · GBPUSD (IC Markets)',
+    symbol: 'GBPUSD',
+    assetName: 'xyz:GBP',
+    swapLongPoints: -4.50,
+    swapShortPoints: 0.95,
+    pointSize: 0.00001,
+    contractSize: 100000,
+    defaultPrice: 1.3050
   },
   {
     id: 'XAUUSD',

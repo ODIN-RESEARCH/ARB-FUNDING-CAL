@@ -12,11 +12,16 @@ export interface HyperliquidAsset {
   lastUpdated?: number
 }
 
+export type MarketTier = 'crypto' | 'tradfi' | 'fx'
+
 export interface HLFundingParams {
-  interestRate8hBps: number // standard: 1.0 bps (0.01%)
-  interestRateAnnualPct: number // 10.95% (1.0 bps * 3 * 365 / 100)
-  floorMinBps: number // default: -4.0 bps
-  floorMaxBps: number // default: +6.0 bps
+  tier?: MarketTier // 'crypto' | 'tradfi' | 'fx'
+  interestRate8hBps: number // standard: 1.0 bps (0.01%), or 0 for FX
+  interestRateAnnualPct: number // 10.95% (crypto), 5.48% (tradfi), or 0.0% (FX)
+  clampBps: number // 5.0 for crypto, 3.0 for tradfi/fx
+  decayDivisor: number // 8 for crypto, 16 for tradfi/fx
+  floorMinBps: number // default: -4.0 (crypto), -2.0 (tradfi), -3.0 (fx)
+  floorMaxBps: number // default: +6.0 (crypto), +4.0 (tradfi), +3.0 (fx)
   hourlyCapBps: number // default: 400 bps (4%/h)
   multiplier: number // e.g. 0.5 for HIP-3 forex
 }

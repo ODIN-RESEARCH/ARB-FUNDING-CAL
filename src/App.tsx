@@ -21,6 +21,7 @@ import {
 } from './types/calculator'
 import {
   DEFAULT_HL_PARAMS,
+  getParamsForAsset,
   POPULAR_MT5_PRESETS,
   calculateQuote,
   calculateMT5FairValue,
@@ -70,15 +71,15 @@ export const App: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<number | null>(Date.now())
 
   // Price inputs (allow manual edits/simulation)
-  const [markPriceInput, setMarkPriceInput] = useState<string>('1.1197')
-  const [oraclePriceInput, setOraclePriceInput] = useState<string>('1.1192')
+  const [markPriceInput, setMarkPriceInput] = useState<string>('1.1154')
+  const [oraclePriceInput, setOraclePriceInput] = useState<string>('1.1154')
   const [isUserModified, setIsUserModified] = useState<boolean>(false)
 
   // MT5 Hedge presets & broker inputs
   const [mt5Presets, setMt5Presets] = useState<MT5SwapPreset[]>(POPULAR_MT5_PRESETS)
   const [selectedMt5PresetId, setSelectedMt5PresetId] = useState<string>('EURUSD')
-  const [swapLongInput, setSwapLongInput] = useState<string>('-8.001')
-  const [swapShortInput, setSwapShortInput] = useState<string>('1.301')
+  const [swapLongInput, setSwapLongInput] = useState<string>('-8.00')
+  const [swapShortInput, setSwapShortInput] = useState<string>('1.30')
   const [pointSizeInput, setPointSizeInput] = useState<string>('0.00001')
   const [mt5Connected, setMt5Connected] = useState<boolean>(false)
   const [mt5Server, setMt5Server] = useState<string>('')
@@ -189,9 +190,13 @@ export const App: React.FC = () => {
       setSwapShortInput(preset.swapShortPoints.toString())
       setPointSizeInput(preset.pointSize.toString())
 
+      // Auto-calibrate market funding tier (Forex: 0% floor, TradFi: 5.48%, Crypto: 10.95%)
+      const calibratedParams = getParamsForAsset(found.name)
+      setHlParams(calibratedParams)
+
       addToast({
-        title: 'Instrument & MT5 Hedge Linked',
-        message: `${found.name} ⇄ ${preset.symbol} (swaps auto-matched)`,
+        title: `Tier: ${calibratedParams.tier?.toUpperCase() || 'CALIBRATED'} Linked`,
+        message: `${found.name} (Clamp ±${calibratedParams.clampBps} bps, Band ${calibratedParams.floorMinBps} to +${calibratedParams.floorMaxBps} bps, Floor ${calibratedParams.interestRateAnnualPct.toFixed(2)}%/yr)`,
         type: 'success'
       })
 
@@ -246,6 +251,7 @@ export const App: React.FC = () => {
           setSelectedAssetName(found.name)
           setMarkPriceInput(found.markPx.toString())
           setOraclePriceInput(found.oraclePx.toString())
+          setHlParams(getParamsForAsset(found.name))
         }
       }
     }

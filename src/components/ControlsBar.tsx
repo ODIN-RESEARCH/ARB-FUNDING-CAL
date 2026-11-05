@@ -137,8 +137,13 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
       </div>
 
       {/* Dynamic subtitle description line matching screenshot */}
-      <div className="mt-2.5 text-[11px] text-[#8b949e]">
-        Funding in {fundingUnitLabel} against the premium, ±{range} bps. Floor from {params.floorMinBps} to +{params.floorMaxBps} bps; positive means longs pay shorts. Premium shown as mark − oracle at an oracle of {oraclePrice.toFixed(4)}.
+      <div className="mt-2.5 text-[11px] text-[#8b949e] flex items-center justify-between flex-wrap gap-2">
+        <span>
+          Funding in {fundingUnitLabel} against the premium, ±{range} bps. {params.interestRateAnnualPct === 0 ? 'Zero-slope band' : 'Floor'} from {params.floorMinBps} to +{params.floorMaxBps} bps; positive means longs pay shorts. Premium shown as mark − oracle at an oracle of {oraclePrice.toFixed(4)}.
+        </span>
+        <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#181a1f] border border-[#272b35] text-[#38bdf8]">
+          Tier: <strong className="text-white">{params.tier ? params.tier.toUpperCase() : 'CALIBRATED'}</strong> (Clamp ±{params.clampBps ?? 3} bps)
+        </span>
       </div>
     </div>
   )

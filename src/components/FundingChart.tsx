@@ -476,7 +476,9 @@ export const FundingChart: React.FC<FundingChartProps> = ({
               fill="#00e599"
               className="font-sans font-semibold tracking-wide"
             >
-              Floor: {formatFundingValue(floorAnnualPct).toFixed(2)} {fundingUnit === 'yr' ? '%/yr' : 'bps'}
+              {floorAnnualPct === 0
+                ? `Zero Funding: ${params.floorMinBps} to +${params.floorMaxBps} bps`
+                : `Floor: ${formatFundingValue(floorAnnualPct).toFixed(2)} ${fundingUnit === 'yr' ? '%/yr' : 'bps'}`}
             </text>
           )}
 

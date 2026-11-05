@@ -162,30 +162,69 @@ export const StrategyGuideModal: React.FC<StrategyGuideModalProps> = ({ isOpen, 
           {activeTab === 'curve' && (
             <div className="space-y-3.5 animate-fade-in">
               <div className="p-3 bg-[#181a1f] border border-[#272b35] rounded-lg">
-                <div className="text-white font-bold mb-1">The Hyperliquid Funding Formula</div>
+                <div className="text-white font-bold mb-1">Hyperliquid Piecewise Funding Engine (3 Market Tiers)</div>
                 <p className="text-[#8b949e] text-[11px] leading-relaxed">
-                  Hyperliquid uses a piecewise-linear funding formula with a built-in interest rate floor to maintain peg stability and incentivize liquidity.
+                  Hyperliquid and tradeXYZ (HIP-3) apply 3 calibrated market tiers depending on asset class. Forex perps have zero interest rate floor, while crypto and commodities have fixed positive baselines.
                 </p>
               </div>
 
+              {/* 3 Tiers Comparison Table matching empirical tradeXYZ data */}
+              <div className="overflow-x-auto border border-[#272b35] rounded-lg">
+                <table className="w-full text-left font-mono text-[10px]">
+                  <thead className="bg-[#111215] text-[#8b949e] border-b border-[#272b35]">
+                    <tr>
+                      <th className="p-2">Market Tier</th>
+                      <th className="p-2">Interest Rate (8h)</th>
+                      <th className="p-2">Clamp</th>
+                      <th className="p-2">Zero-Slope Band</th>
+                      <th className="p-2">Flat Baseline</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#272b35]">
+                    <tr className="bg-[#14161a]/60">
+                      <td className="p-2 text-purple-400 font-bold">Main DEX (BTC, ETH)</td>
+                      <td className="p-2">1.0 bps</td>
+                      <td className="p-2">±5.0 bps</td>
+                      <td className="p-2">-4 to +6 bps</td>
+                      <td className="p-2 text-[#00e599]">0.125 bps/h (+10.95%/yr)</td>
+                    </tr>
+                    <tr className="bg-[#14161a]/60">
+                      <td className="p-2 text-cyan-400 font-bold">xyz TradFi (GOLD, TSLA, SPX)</td>
+                      <td className="p-2">1.0 bps</td>
+                      <td className="p-2">±3.0 bps</td>
+                      <td className="p-2">-2 to +4 bps</td>
+                      <td className="p-2 text-[#00e599]">0.0625 bps/h (+5.48%/yr)</td>
+                    </tr>
+                    <tr className="bg-[#00e599]/5">
+                      <td className="p-2 text-[#00e599] font-bold">xyz FX (JPY, EUR, GBP)</td>
+                      <td className="p-2">0.0 bps</td>
+                      <td className="p-2">±3.0 bps</td>
+                      <td className="p-2 font-bold text-white">-3 to +3 bps</td>
+                      <td className="p-2 text-neutral-400">0.000 bps/h (0.00%)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
               <div className="space-y-2 font-mono text-[11px]">
-                <div className="p-2.5 rounded bg-[#111215] border border-[#272b35]">
-                  <span className="text-[#00e599] font-bold">1. Interest Rate Floor:</span>
-                  <div className="text-gray-300 mt-0.5">
-                    For deviations between <span className="text-white font-bold">-4.0 bps</span> and <span className="text-white font-bold">+6.0 bps</span>, funding rate is pegged at the baseline interest rate: <span className="text-[#00e599] font-bold">1.0 bps/8h</span> (10.95% annual).
+                <div className="p-2.5 rounded bg-[#111215] border border-[#00e599]/30">
+                  <span className="text-[#00e599] font-bold">Forex Empirical Inferred Curve (212 Hourly Observations):</span>
+                  <div className="text-gray-300 mt-1 space-y-0.5 text-[10px]">
+                    <div>• <strong>P &gt; +3 bps:</strong> Funding = (Premium − 3) / 16</div>
+                    <div>• <strong>−3 &le; P &le; +3 bps:</strong> Funding = 0.00% (dead zero funding)</div>
+                    <div>• <strong>P &lt; −3 bps:</strong> Funding = (Premium + 3) / 16</div>
                   </div>
                 </div>
 
                 <div className="p-2.5 rounded bg-[#111215] border border-[#272b35]">
-                  <span className="text-amber-400 font-bold">2. Linear Transition Outside Floor:</span>
-                  <div className="text-gray-300 mt-0.5">
-                    If Premium &gt; +6 bps: Funding = Premium − 5 bps (slope = 1.0)<br />
-                    If Premium &lt; −4 bps: Funding = Premium + 5 bps (slope = 1.0)
+                  <span className="text-amber-400 font-bold">Why Grid Center Calibration Matters:</span>
+                  <div className="text-gray-300 mt-0.5 text-[10px] leading-normal font-sans">
+                    Correcting the grid centre from old crypto-assumptions to the true FX fair premium (e.g. <strong>-0.05564 for USDJPY</strong> and <strong>+0.000366 for EURUSD</strong>) resulted in <strong>+53% higher net carry profit</strong> in empirical backtests by aligning order grids with true swap parity.
                   </div>
                 </div>
 
                 <div className="p-2.5 rounded bg-[#111215] border border-[#272b35]">
-                  <span className="text-[#ff4d4f] font-bold">3. Hourly Cap:</span>
+                  <span className="text-[#ff4d4f] font-bold">Hourly Funding Cap:</span>
                   <div className="text-gray-300 mt-0.5">
                     Absolute funding is capped at <span className="text-white font-bold">400 bps/hr (4%/hr)</span> to prevent cascade liquidation events.
                   </div>
