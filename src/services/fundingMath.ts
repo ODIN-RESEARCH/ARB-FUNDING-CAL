@@ -261,11 +261,10 @@ export function calculateMT5FairValue(
 
   // No-carry band: range where neither hedge earns positive carry:
   // HL funding is between short swap (+annualizedShortPct) and minus long swap (-annualizedLongPct)
-  // Min boundary: F_hl = shortSwapPct
-  const noCarryBandMinBps = invertFundingPctToPremiumBps(annualizedShortPct, params)
-
-  // Max boundary: F_hl = -longSwapPct
-  const noCarryBandMaxBps = invertFundingPctToPremiumBps(-annualizedLongPct, params)
+  const b1 = invertFundingPctToPremiumBps(annualizedShortPct, params)
+  const b2 = invertFundingPctToPremiumBps(-annualizedLongPct, params)
+  const noCarryBandMinBps = Math.min(b1, b2)
+  const noCarryBandMaxBps = Math.max(b1, b2)
 
   const premiumVsFairBps = livePremiumBps - fairPremiumBps
 

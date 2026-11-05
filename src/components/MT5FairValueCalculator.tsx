@@ -165,7 +165,10 @@ export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
         <div className="flex items-center justify-between relative has-tooltip">
           <span className="text-[#8b949e] cursor-help border-b border-dotted border-gray-600">Fair premium</span>
           <span className="text-[#c084fc] font-semibold">
-            {formatBps(mt5Result.fairPremiumBps)}
+            {formatBps(mt5Result.fairPremiumBps)}{' '}
+            <span className="text-[11px] font-normal text-purple-300/80">
+              ({mt5Result.fairPremiumPrice >= 0 ? '+' : ''}{Math.abs(mt5Result.fairPremiumPrice) < 0.01 ? mt5Result.fairPremiumPrice.toFixed(6) : mt5Result.fairPremiumPrice.toFixed(4)})
+            </span>
           </span>
           <div className="tooltip-popup absolute bottom-full left-0 mb-1.5 w-52 p-2 bg-[#1e2229] border border-[#343a46] rounded shadow-xl text-[10px] text-gray-300 font-sans z-30 pointer-events-none">
             Target Hyperliquid price deviation where funding matches MT5 financing.
