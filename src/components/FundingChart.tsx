@@ -18,7 +18,6 @@ interface FundingChartProps {
   livePremiumBps: number
   mt5Result: MT5CalculationResult
   params: HLFundingParams
-  onSelectPremiumBps?: (bps: number) => void
 }
 
 export const FundingChart: React.FC<FundingChartProps> = ({
@@ -29,13 +28,14 @@ export const FundingChart: React.FC<FundingChartProps> = ({
   oraclePrice,
   livePremiumBps,
   mt5Result,
-  params,
-  onSelectPremiumBps
+  params
 }) => {
   const containerRef = useRef<SVGSVGElement | null>(null)
   const [hoverData, setHoverData] = useState<{
-    xSvg: number
-    ySvg: number
+    svgX: number
+    svgY: number
+    clientX: number
+    clientY: number
     pBps: number
     pPrice: number
     fundingY: number
@@ -169,33 +169,47 @@ export const FundingChart: React.FC<FundingChartProps> = ({
 
   const yZeroY = scaleY(0)
 
-  // Handle mouse move for hover crosshair
+  // Handle mouse move for hover crosshair & precision tracking dot
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
+    const svg = containerRef.current
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+
+    // Screen mouse coordinates relative to SVG
+    const clientX = e.clientX - rect.left
+    const clientY = e.clientY - rect.top
+
+    // Project client mouse coordinates into SVG viewBox coordinate space (0..width, 0..height)
+    const svgX = (clientX / rect.width) * width
+    const svgY = (clientY / rect.height) * height
 
     // Clamp inside plot area
     if (
-      mouseX < padLeft ||
-      mouseX > padLeft + plotWidth ||
-      mouseY < padTop ||
-      mouseY > padTop + plotHeight
+      svgX < padLeft ||
+      svgX > padLeft + plotWidth ||
+      svgY < padTop ||
+      svgY > padTop + plotHeight
     ) {
       setHoverData(null)
       return
     }
 
-    const ratioX = (mouseX - padLeft) / plotWidth
+    const ratioX = (svgX - padLeft) / plotWidth
     const pBps = xMinBps + ratioX * (xMaxBps - xMinBps)
     const pPrice = bpsToPrice(pBps)
     const res = calculateHLFundingFromPremiumBps(pBps, params)
     const fundingY = formatFundingValue(res.fundingAnnualizedPct)
 
+    // Exact curve coordinates on the chart line in SVG space
+    const curveSvgX = scaleX(pBps)
+    const curveSvgY = scaleY(res.fundingAnnualizedPct)
+
     setHoverData({
-      xSvg: mouseX,
-      ySvg: mouseY,
+      svgX: curveSvgX,
+      svgY: curveSvgY,
+      clientX,
+      clientY,
       pBps,
       pPrice,
       fundingY
@@ -204,12 +218,6 @@ export const FundingChart: React.FC<FundingChartProps> = ({
 
   const handleMouseLeave = () => {
     setHoverData(null)
-  }
-
-  const handleClick = () => {
-    if (hoverData && onSelectPremiumBps) {
-      onSelectPremiumBps(hoverData.pBps)
-    }
   }
 
   // Format tick labels
@@ -277,7 +285,6 @@ export const FundingChart: React.FC<FundingChartProps> = ({
         className="w-full h-auto select-none cursor-crosshair font-mono"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
       >
         <defs>
           <clipPath id="plotClip">
@@ -523,30 +530,32 @@ export const FundingChart: React.FC<FundingChartProps> = ({
             </g>
           )}
 
-          {/* Hover Crosshair & Dot */}
+          {/* Hover Crosshair & Dot - 100% attached to curve */}
           {hoverData && (
             <g>
               <line
-                x1={hoverData.xSvg}
+                x1={hoverData.svgX}
                 y1={padTop}
-                x2={hoverData.xSvg}
+                x2={hoverData.svgX}
                 y2={padTop + plotHeight}
                 stroke="#94a3b8"
                 strokeWidth="1"
                 strokeDasharray="2 2"
+                opacity="0.7"
               />
               <line
                 x1={padLeft}
-                y1={scaleY(hoverData.fundingY * (fundingUnit === 'yr' ? 1 : 10.95))}
+                y1={hoverData.svgY}
                 x2={padLeft + plotWidth}
-                y2={scaleY(hoverData.fundingY * (fundingUnit === 'yr' ? 1 : 10.95))}
+                y2={hoverData.svgY}
                 stroke="#94a3b8"
                 strokeWidth="1"
                 strokeDasharray="2 2"
+                opacity="0.7"
               />
               <circle
-                cx={hoverData.xSvg}
-                cy={scaleY(hoverData.fundingY * (fundingUnit === 'yr' ? 1 : 10.95))}
+                cx={hoverData.svgX}
+                cy={hoverData.svgY}
                 r="4.5"
                 fill="#00e599"
                 stroke="#fff"
@@ -582,19 +591,19 @@ export const FundingChart: React.FC<FundingChartProps> = ({
         </text>
       </svg>
 
-      {/* Floating Hover Tooltip */}
+      {/* Floating Hover Tooltip - follows mouse cursor */}
       {hoverData && (
         <div
-          className="absolute z-20 pointer-events-none bg-[#1e2229] border border-[#3a414f] rounded shadow-xl px-3 py-2 text-xs font-mono"
+          className="absolute z-30 pointer-events-none bg-[#1e2229]/95 backdrop-blur-sm border border-[#3a414f] rounded-md shadow-2xl px-3 py-2 text-xs font-mono"
           style={{
-            left: Math.min(hoverData.xSvg + 12, width - 210),
-            top: Math.max(hoverData.ySvg - 60, 20)
+            left: `${Math.min(hoverData.clientX + 14, (containerRef.current?.getBoundingClientRect().width || width) - 230)}px`,
+            top: `${Math.max(hoverData.clientY - 45, 12)}px`
           }}
         >
           <div className="text-white font-semibold flex items-center justify-between gap-3">
             <span>Premium:</span>
             <span className="text-[#00e599]">
-              {hoverData.pBps >= 0 ? '+' : ''}{hoverData.pBps.toFixed(2)} bps ({hoverData.pPrice >= 0 ? '+' : ''}{hoverData.pPrice.toFixed(5)})
+              {hoverData.pBps >= 0 ? '+' : ''}{hoverData.pBps.toFixed(2)} bps ({hoverData.pPrice >= 0 ? '+' : ''}{Math.abs(hoverData.pPrice) < 0.005 ? hoverData.pPrice.toFixed(5) : Math.abs(hoverData.pPrice) < 0.1 ? hoverData.pPrice.toFixed(4) : hoverData.pPrice.toFixed(2)})
             </span>
           </div>
           <div className="text-gray-300 flex items-center justify-between gap-3 mt-1">
@@ -602,9 +611,6 @@ export const FundingChart: React.FC<FundingChartProps> = ({
             <span className="text-[#38bdf8] font-semibold">
               {hoverData.fundingY >= 0 ? '+' : ''}{hoverData.fundingY.toFixed(2)} {fundingUnit === 'yr' ? '%/yr' : 'bps'}
             </span>
-          </div>
-          <div className="text-[10px] text-gray-400 mt-1 border-t border-gray-700 pt-1">
-            Click to simulate this premium
           </div>
         </div>
       )}

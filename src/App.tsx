@@ -271,19 +271,6 @@ export const App: React.FC = () => {
     }
   }
 
-  // Handle clicking on chart to set simulated premium
-  const handleSelectPremiumBps = (simulatedBps: number) => {
-    const oracle = parseFloat(oraclePriceInput) || 1.0
-    const simulatedPrice = (simulatedBps / 10000) * oracle
-    const newMarkPrice = oracle + simulatedPrice
-    setMarkPriceInput(newMarkPrice.toFixed(5))
-    setIsUserModified(true)
-    addToast({
-      title: 'Interactive Curve Simulation',
-      message: `Simulating deviation of ${simulatedBps >= 0 ? '+' : ''}${simulatedBps.toFixed(1)} bps (Mark: $${newMarkPrice.toFixed(4)})`,
-      type: 'info'
-    })
-  }
 
   // Parse numeric values
   const markPrice = parseFloat(markPriceInput) || 0
@@ -363,7 +350,6 @@ export const App: React.FC = () => {
               livePremiumBps={quoteResult.premiumBps}
               mt5Result={mt5Result}
               params={hlParams}
-              onSelectPremiumBps={handleSelectPremiumBps}
             />
           </div>
 
