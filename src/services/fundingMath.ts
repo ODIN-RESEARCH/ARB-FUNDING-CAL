@@ -59,20 +59,24 @@ export function detectMarketTier(assetName: string): MarketTier {
   const upper = assetName.toUpperCase()
   const clean = upper.replace('XYZ:', '').replace('/', '').trim()
 
-  const fxCurrencies = [
+  const fxCurrencies = new Set([
     'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD',
     'EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD'
-  ]
-  if (fxCurrencies.some(fx => clean === fx || clean.startsWith(fx))) {
+  ])
+  if (fxCurrencies.has(clean)) {
     return 'fx'
   }
 
-  const tradfiAssets = [
+  if (upper.startsWith('XYZ:') || upper.startsWith('KW:') || upper.startsWith('MKTS:') || upper.startsWith('CASH:') || upper.startsWith('PARA:')) {
+    return 'tradfi'
+  }
+
+  const tradfiAssets = new Set([
     'GOLD', 'XAU', 'SILVER', 'XAG', 'OIL', 'COPPER',
     'TSLA', 'NVDA', 'AAPL', 'MSFT', 'AMZN', 'GOOGL', 'META',
     'SPX', 'SPY', 'QQQ', 'NDX', 'DJI', 'JP225', 'US500', 'US30', 'NAS100', 'DAX', 'GER40', 'UK100', 'NIKKEI'
-  ]
-  if (tradfiAssets.some(t => clean === t || clean.includes(t)) || upper.startsWith('XYZ:')) {
+  ])
+  if (tradfiAssets.has(clean)) {
     return 'tradfi'
   }
 
