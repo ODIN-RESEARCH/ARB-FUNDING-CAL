@@ -462,11 +462,11 @@ export const POPULAR_MT5_PRESETS: MT5SwapPreset[] = [
     label: 'JP225 · JP225 (Nikkei CFD)',
     symbol: 'JP225',
     assetName: 'xyz:JP225',
-    swapLongPoints: -4.10,
-    swapShortPoints: 0.50,
+    swapLongPoints: -11.238,
+    swapShortPoints: -6.743,
     pointSize: 1.0,
     contractSize: 1,
-    defaultPrice: 58850.00
+    defaultPrice: 59179.00
   },
   {
     id: 'USOIL',

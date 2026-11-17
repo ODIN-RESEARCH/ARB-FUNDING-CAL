@@ -127,9 +127,9 @@ export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-[#8b949e]">MT5 swap long / short</span>
           <div className="flex items-center gap-1 font-semibold">
-            <span className="text-[#ff4d4f]">{swapLongInput}</span>
+            <span className="text-[#ff4d4f]">{Number(swapLongInput) > 0 ? `+${swapLongInput}` : swapLongInput}</span>
             <span className="text-gray-500">/</span>
-            <span className="text-[#00e599]">+{swapShortInput}</span>
+            <span className="text-[#00e599]">{Number(swapShortInput) > 0 ? `+${swapShortInput}` : swapShortInput}</span>
           </div>
         </div>
 
