@@ -221,8 +221,8 @@ export const FundingChart: React.FC<FundingChartProps> = ({
     const absVal = Math.abs(priceVal)
     const prefix = priceVal < 0 ? '−' : priceVal > 0 ? '+' : ''
     if (absVal < 0.005) {
-      return `${prefix}${absVal.toFixed(4)}`
-    } else if (absVal < 0.05) {
+      return `${prefix}${absVal.toFixed(5)}`
+    } else if (absVal < 0.1) {
       return `${prefix}${absVal.toFixed(4)}`
     }
     return `${prefix}${absVal.toFixed(2)}`
@@ -235,7 +235,7 @@ export const FundingChart: React.FC<FundingChartProps> = ({
     const priceVal = bpsToPrice(pBps)
     const absVal = Math.abs(priceVal)
     const sign = priceVal >= 0 ? '+' : '−'
-    const formattedPrice = absVal < 0.005 ? absVal.toFixed(4) : absVal < 0.1 ? absVal.toFixed(4) : absVal.toFixed(2)
+    const formattedPrice = absVal < 0.005 ? absVal.toFixed(5) : absVal < 0.1 ? absVal.toFixed(4) : absVal.toFixed(2)
     return `Premium ${sign}${formattedPrice}`
   }
 
@@ -246,7 +246,7 @@ export const FundingChart: React.FC<FundingChartProps> = ({
     const priceVal = bpsToPrice(fBps)
     const absVal = Math.abs(priceVal)
     const sign = priceVal >= 0 ? '+' : '−'
-    const formattedPrice = absVal < 0.005 ? absVal.toFixed(4) : absVal < 0.1 ? absVal.toFixed(4) : absVal.toFixed(3)
+    const formattedPrice = absVal < 0.005 ? absVal.toFixed(5) : absVal < 0.1 ? absVal.toFixed(4) : absVal.toFixed(2)
     return `Fair ${sign}${formattedPrice}`
   }
 
@@ -257,7 +257,7 @@ export const FundingChart: React.FC<FundingChartProps> = ({
     const priceVal = bpsToPrice(fBps)
     const absVal = Math.abs(priceVal)
     const sign = priceVal >= 0 ? '+' : '−'
-    const formattedPrice = absVal < 0.005 ? absVal.toFixed(4) : absVal.toFixed(3)
+    const formattedPrice = absVal < 0.005 ? absVal.toFixed(5) : absVal < 0.1 ? absVal.toFixed(4) : absVal.toFixed(2)
     return `${sign}${formattedPrice}`
   }
 

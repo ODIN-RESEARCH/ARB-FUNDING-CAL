@@ -34,7 +34,7 @@ export const ArbitrageStatsBar: React.FC<ArbitrageStatsBarProps> = ({
             {quoteResult.premiumBps >= 0 ? '+' : ''}{quoteResult.premiumBps.toFixed(2)} bps
           </span>
           <span className="text-[10px] text-gray-500">
-            ({quoteResult.premiumPrice >= 0 ? '+' : ''}{quoteResult.premiumPrice.toFixed(4)})
+            ({quoteResult.premiumPrice >= 0 ? '+' : ''}{quoteResult.premiumPrice.toFixed(Math.abs(quoteResult.premiumPrice) < 0.005 ? 5 : Math.abs(quoteResult.premiumPrice) < 0.1 ? 4 : 2)})
           </span>
         </div>
         {/* Tooltip Popup */}
@@ -72,7 +72,7 @@ export const ArbitrageStatsBar: React.FC<ArbitrageStatsBarProps> = ({
         <div className="text-[10px] text-[#8b949e] font-sans flex items-center justify-between">
           <span>MT5 Swaps ({symbol})</span>
           <span className="text-[9px] text-[#c084fc] font-bold">
-            Fair: {mt5Result.fairPremiumBps >= 0 ? '+' : ''}{mt5Result.fairPremiumBps.toFixed(2)} bps ({mt5Result.fairPremiumPrice >= 0 ? '+' : ''}{mt5Result.fairPremiumPrice.toFixed(4)})
+            Fair: {mt5Result.fairPremiumBps >= 0 ? '+' : ''}{mt5Result.fairPremiumBps.toFixed(2)} bps ({mt5Result.fairPremiumPrice >= 0 ? '+' : ''}{mt5Result.fairPremiumPrice.toFixed(Math.abs(mt5Result.fairPremiumPrice) < 0.005 ? 5 : Math.abs(mt5Result.fairPremiumPrice) < 0.1 ? 4 : 2)})
           </span>
         </div>
         <div className="flex items-baseline gap-1.5 mt-1">
