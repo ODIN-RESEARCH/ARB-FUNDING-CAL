@@ -484,11 +484,11 @@ export const POPULAR_MT5_PRESETS: MT5SwapPreset[] = [
     label: 'BTC · BTCUSD (MT5 CFD)',
     symbol: 'BTCUSD',
     assetName: 'BTC',
-    swapLongPoints: -25.00,
-    swapShortPoints: 4.50,
+    swapLongPoints: -466.44,
+    swapShortPoints: 77.15,
     pointSize: 0.01,
     contractSize: 1,
-    defaultPrice: 65000.00
+    defaultPrice: 64002.00
   },
   {
     id: 'ETHUSD',
