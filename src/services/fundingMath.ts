@@ -642,9 +642,10 @@ export function findOrCreateMt5Hedge(
 
   // 3. Synthesize an MT5 hedge preset for this instrument
   const isCrypto = !assetName.includes(':') // Native Hyperliquid perps are crypto
+  const isIndex = upperTicker.includes('JP225') || upperTicker.includes('NIKKEI') || upperTicker.includes('US500') || upperTicker.includes('US100')
   const isMicro = assetPrice < 2.0 && assetPrice > 0
   const isHighValue = assetPrice > 500
-  const pointSize = isMicro ? 0.00001 : isHighValue ? 0.1 : 0.01
+  const pointSize = isIndex ? 1.0 : isMicro ? 0.00001 : isHighValue ? 0.1 : 0.01
   const contractSize = isMicro ? 100000 : 1
 
   const safePrice = assetPrice > 0 ? assetPrice : 100

@@ -206,7 +206,9 @@ export const App: React.FC = () => {
           if (live) {
             setSwapLongInput(live.swap_long.toString())
             setSwapShortInput(live.swap_short.toString())
-            setPointSizeInput(live.point.toString())
+            const isIdx = preset.symbol.toUpperCase().includes('JP225') || preset.symbol.toUpperCase().includes('NIKKEI')
+            const effectivePt = isIdx ? 1.0 : (preset.pointSize || live.point)
+            setPointSizeInput(effectivePt.toString())
             addToast({
               title: 'Live MT5 Swaps Loaded',
               message: `Live tick swaps for ${preset.symbol}: ${live.swap_long} / +${live.swap_short}`,
@@ -239,7 +241,9 @@ export const App: React.FC = () => {
           if (live) {
             setSwapLongInput(live.swap_long.toString())
             setSwapShortInput(live.swap_short.toString())
-            setPointSizeInput(live.point.toString())
+            const isIdx = preset.symbol.toUpperCase().includes('JP225') || preset.symbol.toUpperCase().includes('NIKKEI')
+            const effectivePt = isIdx ? 1.0 : (preset.pointSize || live.point)
+            setPointSizeInput(effectivePt.toString())
           }
         })
       }

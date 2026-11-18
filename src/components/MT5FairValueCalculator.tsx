@@ -120,7 +120,7 @@ export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-[#8b949e]">Symbol</span>
           <span className="text-white">
-            {currentPreset.symbol} · swaps in points
+            {currentPreset.symbol} · {currentPreset.pointSize === 1.0 ? 'swaps in margin currency' : 'swaps in points'}
           </span>
         </div>
 
