@@ -81,6 +81,8 @@ export const App: React.FC = () => {
   const [swapLongInput, setSwapLongInput] = useState<string>('-8.00')
   const [swapShortInput, setSwapShortInput] = useState<string>('1.30')
   const [pointSizeInput, setPointSizeInput] = useState<string>('0.00001')
+  const [useDirectRate, setUseDirectRate] = useState<boolean>(false)
+  const [directRateInput, setDirectRateInput] = useState<string>('')
   const [mt5Connected, setMt5Connected] = useState<boolean>(false)
   const [mt5Server, setMt5Server] = useState<string>('')
 
@@ -289,15 +291,29 @@ export const App: React.FC = () => {
   }, [markPrice, oraclePrice, hlParams])
 
   const mt5Result = useMemo(() => {
+    const directPct =
+      useDirectRate && directRateInput.trim() !== ''
+        ? parseFloat(directRateInput)
+        : null
     return calculateMT5FairValue(
       swapLong,
       swapShort,
       pointSize,
       oraclePrice,
       quoteResult.premiumBps,
-      hlParams
+      hlParams,
+      directPct
     )
-  }, [swapLong, swapShort, pointSize, oraclePrice, quoteResult.premiumBps, hlParams])
+  }, [
+    swapLong,
+    swapShort,
+    pointSize,
+    oraclePrice,
+    quoteResult.premiumBps,
+    hlParams,
+    useDirectRate,
+    directRateInput
+  ])
 
   const currentPreset =
     mt5Presets.find((p) => p.id === selectedMt5PresetId) || mt5Presets[0]
@@ -410,6 +426,10 @@ export const App: React.FC = () => {
             pointSizeInput={pointSizeInput}
             onChangePointSize={setPointSizeInput}
             mt5Result={mt5Result}
+            useDirectRate={useDirectRate}
+            onToggleDirectRate={setUseDirectRate}
+            directRateInput={directRateInput}
+            onChangeDirectRate={setDirectRateInput}
           />
         </div>
       </div>

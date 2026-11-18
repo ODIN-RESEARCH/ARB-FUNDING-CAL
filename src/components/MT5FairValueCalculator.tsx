@@ -14,6 +14,10 @@ interface MT5FairValueCalculatorProps {
   pointSizeInput: string
   onChangePointSize: (val: string) => void
   mt5Result: MT5CalculationResult
+  useDirectRate?: boolean
+  onToggleDirectRate?: (val: boolean) => void
+  directRateInput?: string
+  onChangeDirectRate?: (val: string) => void
 }
 
 export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
@@ -26,7 +30,11 @@ export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
   onChangeSwapShort,
   pointSizeInput,
   onChangePointSize,
-  mt5Result
+  mt5Result,
+  useDirectRate = false,
+  onToggleDirectRate,
+  directRateInput = '',
+  onChangeDirectRate
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const currentPreset = presets.find((p) => p.id === selectedPresetId) || presets[0]
@@ -57,7 +65,7 @@ export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
       </div>
 
       {/* MT5 Hedge Selector */}
-      <div className="mb-3">
+      <div className="mb-2">
         <label className="block text-[11px] text-[#8b949e] font-sans mb-1">
           MT5 hedge
         </label>
@@ -66,6 +74,41 @@ export const MT5FairValueCalculator: React.FC<MT5FairValueCalculatorProps> = ({
           selectedPresetId={selectedPresetId}
           onSelectPreset={onSelectPreset}
         />
+      </div>
+
+      {/* Direct Annual Rate (%) Toggle */}
+      <div className="mb-3">
+        <button
+          type="button"
+          onClick={() => onToggleDirectRate && onToggleDirectRate(!useDirectRate)}
+          className="text-[11px] text-[#00e599] hover:text-[#00e599]/80 underline decoration-dotted transition-colors font-sans cursor-pointer block text-left"
+        >
+          {useDirectRate
+            ? '← Use broker swap points instead'
+            : 'Or your own annual rate (%), instead of the swaps'}
+        </button>
+
+        {useDirectRate && (
+          <div className="mt-2 p-2.5 bg-[#14161a] border border-[#00e599]/30 rounded space-y-1 animate-slide-down">
+            <label className="block text-[10px] text-[#00e599] font-sans font-semibold">
+              Implied Annual Financing Rate (%)
+            </label>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                step="any"
+                value={directRateInput}
+                onChange={(e) => onChangeDirectRate && onChangeDirectRate(e.target.value)}
+                placeholder="e.g. 1.39"
+                className="w-full bg-[#111215] border border-[#272b35] rounded px-2 py-1 text-white font-mono focus:border-[#00e599] focus:outline-none transition-colors"
+              />
+              <span className="text-[#8b949e] font-mono text-[11px] whitespace-nowrap">% / yr</span>
+            </div>
+            <p className="text-[10px] text-[#8b949e] font-sans">
+              Overrides swap points to directly target your broker's exact net carry rate.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Advanced broker inputs (collapsible or editable directly) */}

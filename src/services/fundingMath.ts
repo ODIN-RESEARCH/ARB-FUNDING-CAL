@@ -240,7 +240,8 @@ export function calculateMT5FairValue(
   pointSize: number,
   oraclePrice: number,
   livePremiumBps: number,
-  params: HLFundingParams = DEFAULT_HL_PARAMS
+  params: HLFundingParams = DEFAULT_HL_PARAMS,
+  directAnnualRatePct?: number | null
 ): MT5CalculationResult {
   const safeOracle = oraclePrice > 0 ? oraclePrice : 1.0
 
@@ -252,8 +253,11 @@ export function calculateMT5FairValue(
   const annualizedLongPct = (dailyLongDollar / safeOracle) * 365 * 100
   const annualizedShortPct = (dailyShortDollar / safeOracle) * 365 * 100
 
-  // Implied annual rate = (short swap - long swap) / 2
-  const impliedAnnualRatePct = (annualizedShortPct - annualizedLongPct) / 2
+  // Implied annual rate = (short swap - long swap) / 2 or direct override
+  const impliedAnnualRatePct =
+    directAnnualRatePct != null && !isNaN(directAnnualRatePct)
+      ? directAnnualRatePct
+      : (annualizedShortPct - annualizedLongPct) / 2
 
   // Broker markup = (-long swap - short swap) / 2
   const brokerMarkupPct = (-annualizedLongPct - annualizedShortPct) / 2
